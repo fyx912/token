@@ -6,13 +6,25 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	//"reflect"
 	"strings"
 	"token/conf"
 	"token/utils"
+	"token/utils/session"
 )
+
+//保存用户的session,如username=session
+var USER_SESSION = make(map[string]session.SessionStore)
+
+//保存所有用户的sessionID,如username=sessionId
+var SESSIONID_USER = make(map[string]string)
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RequestURI)
+	getSessions, sessionId := utils.GetSessionAndSessionId(w, r)
+	defer getSessions.SessionRelease(w) //释放session
+
+	fmt.Println(" session ID=", sessionId)
 	w.Header().Add("Content-Type", "text/html;charset=UTF-8")
 	method := r.Method
 	if method == "GET" {
@@ -30,14 +42,29 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				utils.CheckError(err)
 				fmt.Println("body=", r.Body)
 				fmt.Println("body..jsonData=", string(jsonData))
-				requseUsername := user["username"]
-				requestPassword := user["password"]
+
+				//去除string的前后空白,通过map获取json数据
+				requseUsername := strings.TrimSpace(user["username"])
+				requestPassword := strings.TrimSpace(user["password"])
+
+				//处理用户重复登录
+				userHandle(r, requseUsername)
+				// getSessions = USER_SESSION[requseUsername]
+				//保存username到sessionId
+				//SESSIONID_USER = new map[string]session.SessionStore
+				SESSIONID_USER[sessionId] = requseUsername
+				//保存session到uesrname
+				getSessions.Set("sessionId", sessionId)
+				USER_SESSION[requseUsername] = getSessions
+
 				fmt.Println("body=", requseUsername, user["password"])
+
 				username, password := conf.GetUsers()
 				if requseUsername == username {
 					if requestPassword == password {
 						// t, _ := template.ParseFiles("views/login.gtpl")
 						// t.Execute(w, nil)
+						getSessions.Set("username", requseUsername)
 						data := utils.OutputJsonData(0, "登陆成功!")
 						fmt.Fprintln(w, data)
 						fmt.Println("登陆成功!")
@@ -58,4 +85,32 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, data)
 		}
 	}
+}
+
+/**
+ * [userHandle description] 重复登陆处理
+ * @param  {[type]} r *http.Request [description]
+ * @return {[type]}   [description]
+ */
+func userHandle(r *http.Request, username string) {
+	gosessionid, err := r.Cookie("gosessionid")
+	if err != nil {
+		fmt.Println(" Cookie  err=", err)
+	}
+	//当前的sessionId
+	sessionId := gosessionid.Value
+	//删除当前sessionId绑定的用户
+	delete(SESSIONID_USER, sessionId)
+	getMapSession, ok := USER_SESSION[username]
+	if ok {
+		fmt.Println(" 删除之前保存的sessionId: ", getMapSession.Get("sessionId"))
+		str, _ := getMapSession.Get("sessionId").(string)
+		fmt.Println(" 断言 之前保存的sessionId: ", str)
+		//删除之前sessionId保存的uesrname
+		delete(SESSIONID_USER, str)
+		getMapSession.Delete(username)
+		fmt.Println("您得账号在另一处登录,您被迫下线!")
+	}
+	//删除当前用户绑定的session
+	delete(USER_SESSION, username)
 }

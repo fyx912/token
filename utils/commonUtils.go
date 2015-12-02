@@ -5,6 +5,7 @@ import (
 	"fmt"
 	//"io"
 	"log"
+	"net/http"
 	"token/utils/session"
 )
 
@@ -18,6 +19,20 @@ func init() {
 	go GlobalSessions.GC()
 }
 
+/**
+ * [name description] 获取session和cookie中的sessionId
+ * @param  {[type]} w http.ResponseWriter [description]
+ * @param  {[type]} r *http.Request       [description]
+ * @return {[type]}   [description]
+ */
+func GetSessionAndSessionId(w http.ResponseWriter, r *http.Request) (session.SessionStore, string) {
+	getSessions, err := GlobalSessions.SessionStart(w, r) //公共方法中的session管理器,判断session是否访问
+	CheckError(err)
+	sessionId, err := r.Cookie("gosessionid") //获取浏览器的sessionID
+	CheckError(err)
+	return getSessions, sessionId.Value
+}
+
 //主要go外部文件引用函数,函数名称头字母要大写func C
 func CheckError(err error) {
 	if err != nil {
@@ -26,6 +41,9 @@ func CheckError(err error) {
 	}
 }
 
+/**
+ *输出json提示
+ */
 func OutputJsonData(code int, message string) string {
 	mapData := make(map[string]interface{})
 	mapData["code"] = code

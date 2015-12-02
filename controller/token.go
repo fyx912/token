@@ -3,7 +3,7 @@ package controller
 import (
 	"crypto/md5"
 	"encoding/json"
-	// "fmt"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -29,6 +29,8 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 	if method == "GET" || method == "POST" {
 		conf.GetUsers()
 		getSessions, err := utils.GlobalSessions.SessionStart(w, r) //公共方法中的session管理器,判断session是否访问
+
+		// fmt.Println(getSessions.SessionID(r.Cookies()))
 		utils.CheckError(err)
 		defer getSessions.SessionRelease(w)           //释放session
 		accessToken := getSessions.Get("accessToken") //获取session中的accessToken
