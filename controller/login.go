@@ -10,14 +10,7 @@ import (
 	"strings"
 	"token/conf"
 	"token/utils"
-	"token/utils/session"
 )
-
-//保存用户的session,如username=session
-var USER_SESSION = make(map[string]session.SessionStore)
-
-//保存所有用户的sessionID,如username=sessionId
-var SESSIONID_USER = make(map[string]string)
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RequestURI)
@@ -52,10 +45,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				// getSessions = USER_SESSION[requseUsername]
 				//保存username到sessionId
 				//SESSIONID_USER = new map[string]session.SessionStore
-				SESSIONID_USER[sessionId] = requseUsername
+				utils.SESSIONID_USER[sessionId] = requseUsername
 				//保存session到uesrname
 				getSessions.Set("sessionId", sessionId)
-				USER_SESSION[requseUsername] = getSessions
+				utils.USER_SESSION[requseUsername] = getSessions
 
 				fmt.Println("body=", requseUsername, user["password"])
 
@@ -100,17 +93,17 @@ func userHandle(r *http.Request, username string) {
 	//当前的sessionId
 	sessionId := gosessionid.Value
 	//删除当前sessionId绑定的用户
-	delete(SESSIONID_USER, sessionId)
-	getMapSession, ok := USER_SESSION[username]
+	delete(utils.SESSIONID_USER, sessionId)
+	getMapSession, ok := utils.USER_SESSION[username]
 	if ok {
 		fmt.Println(" 删除之前保存的sessionId: ", getMapSession.Get("sessionId"))
 		str, _ := getMapSession.Get("sessionId").(string)
 		fmt.Println(" 断言 之前保存的sessionId: ", str)
 		//删除之前sessionId保存的uesrname
-		delete(SESSIONID_USER, str)
+		delete(utils.SESSIONID_USER, str)
 		getMapSession.Delete(username)
 		fmt.Println("您得账号在另一处登录,您被迫下线!")
 	}
 	//删除当前用户绑定的session
-	delete(USER_SESSION, username)
+	delete(utils.USER_SESSION, username)
 }
