@@ -1,4 +1,4 @@
-package models
+package db
 
 import (
 	"database/sql"
@@ -11,7 +11,7 @@ import (
 
 //打开数据库
 func OpenDatabase() (db *sql.DB, err error) {
-	return sql.Open("mysql", "root:123456@tcp(192.168.1.135:3306)/testGo?charset=utf8")
+	return sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/testGo?charset=utf8")
 }
 
 //数据库关闭连接

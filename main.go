@@ -41,9 +41,19 @@ func main() {
 	go http.HandleFunc("/destroyToken", controller.DestroyToken)
 	go http.HandleFunc("/login", controller.Login)
 	go http.HandleFunc("/", NotFoundHandler)
-	err := http.ListenAndServe(":8899", nil)
-	fmt.Println("......启动完成:", time.Now())
-	if err != nil {
-		log.Println("ListenAndServe: ", err)
+
+	services := &http.Server{
+		Addr: ":8899",
+		// Handler:        myHandler,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
+	log.Fatal(services.ListenAndServe())
+	fmt.Println("......启动完成:", time.Now())
+	// err := http.ListenAndServe(":8899", nil)
+	// fmt.Println("......启动完成:", time.Now())
+	// if err != nil {
+	// 	log.Println("ListenAndServe: ", err)
+	// }
 }

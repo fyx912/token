@@ -3,7 +3,7 @@ package main
 import (
 	// "database/sql"
 	"fmt"
-	"token/models"
+	"token/db"
 )
 
 type User struct {
@@ -13,11 +13,11 @@ type User struct {
 
 //说明:flag 为函数返回值;username,password为接收参数
 func ValidationLogin(usernames string, passwords string) (falg bool) {
-	db, err := models.OpenDatabase() //连接数据函数
-	CheckError(err)
-	rows, err := db.Query(" SELECT account,password FROM User where 1=1 and account=? and password=? ", usernames, passwords)
-	// rows, err := db.Query(" SELECT account,password FROM User ")
-	CheckError(err)
+	mysql, err := db.OpenDatabase() //连接数据函数
+	db.CheckError(err)
+	rows, err := mysql.Query(" SELECT account as username ,password FROM t_acc_account where 1=1 and account=? and password=? ", usernames, passwords)
+	// rows, err := mysql.Query(" SELECT account,password FROM User ")
+	db.CheckError(err)
 	defer rows.Close()
 	columns, _ := rows.Columns()
 	fmt.Println("columns=", columns)
@@ -26,7 +26,7 @@ func ValidationLogin(usernames string, passwords string) (falg bool) {
 		var username string
 		var password string
 		err := rows.Scan(&username, &password)
-		CheckError(err)
+		db.CheckError(err)
 		user.Username = username
 		user.Password = password
 		fmt.Printf("%s is %v \n", username, password)
@@ -42,13 +42,13 @@ func ValidationLogin(usernames string, passwords string) (falg bool) {
 }
 
 func ValidationLoginTest() {
-	db, err := OpenDatabase()
-	CheckError(err)
+	mysql, err := db.OpenDatabase()
+	db.CheckError(err)
 	usernames := "system"
 	passwords := "123456"
-	rows, err := db.Query(" SELECT account,password FROM User where 1=1 and account=? and password=? ", usernames, passwords)
-	// rows, err := db.Query(" SELECT account,password FROM User ")
-	CheckError(err)
+	rows, err := mysql.Query(" SELECT account,password FROM User where 1=1 and account=? and password=? ", usernames, passwords)
+	// rows, err := mysql.Query(" SELECT account,password FROM User ")
+	db.CheckError(err)
 	defer rows.Close()
 	columns, _ := rows.Columns()
 	fmt.Println("columns=", columns)
@@ -57,7 +57,7 @@ func ValidationLoginTest() {
 		var username string
 		var password string
 		err := rows.Scan(&username, &password)
-		CheckError(err)
+		db.CheckError(err)
 		user.Username = username
 		user.Password = password
 		fmt.Printf("%s is %v \n", username, password)
@@ -71,10 +71,10 @@ func ValidationLoginTest() {
 
 //返回map类型,如: map[account:system password:123456]
 func MapSelect() {
-	db, err := OpenDatabase()
-	CheckError(err)
-	rows, err := db.Query(" SELECT account,password FROM User ")
-	CheckError(err)
+	mysql, err := db.OpenDatabase()
+	db.CheckError(err)
+	rows, err := mysql.Query(" SELECT account,password FROM User ")
+	db.CheckError(err)
 	defer rows.Close()
 	columns, _ := rows.Columns()
 	scanArgs := make([]interface{}, len(columns))
@@ -98,11 +98,11 @@ func MapSelect() {
 
 //说明:flag 为函数返回值;username为接收参数
 func ValidationUsername(usernames string) (falg bool) {
-	db, err := OpenDatabase() //连接数据函数
-	CheckError(err)
-	rows, err := db.Query(" SELECT account,password FROM User where 1=1 and account=? ", usernames)
-	// rows, err := db.Query(" SELECT account,password FROM User ")
-	CheckError(err)
+	mysql, err := db.OpenDatabase() //连接数据函数
+	db.CheckError(err)
+	rows, err := mysql.Query(" SELECT account,password FROM User where 1=1 and account=? ", usernames)
+	// rows, err := mysql.Query(" SELECT account,password FROM User ")
+	db.CheckError(err)
 	defer rows.Close()
 	columns, _ := rows.Columns()
 	fmt.Println("columns=", columns)
@@ -111,7 +111,7 @@ func ValidationUsername(usernames string) (falg bool) {
 		var username string
 		var password string
 		err := rows.Scan(&username, &password)
-		CheckError(err)
+		db.CheckError(err)
 		user.Username = username
 		fmt.Println("%s ", username)
 	}
